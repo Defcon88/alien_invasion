@@ -9,7 +9,8 @@ from explosion import Explosion
 
 from alien import Alien
 
-def check_events(ai_settings, screen, stats, play_button, ship, aliens, bullets, blaster, sb):
+def check_events(ai_settings, screen, stats, play_button, ship, aliens, 
+    bullets, blaster, sb, pause_button):
     '''respond to keypresses and mouse events'''
     for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -22,18 +23,30 @@ def check_events(ai_settings, screen, stats, play_button, ship, aliens, bullets,
             elif event.type == pygame.KEYUP:
                 check_keyup_events(event, ship)
             
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN: 
                 mouse_x, mouse_y = pygame.mouse.get_pos()
-                check_play_button(ai_settings, screen, stats, play_button, 
-                    ship, aliens, bullets, mouse_x, mouse_y, sb)
+                if stats.game_active == False:
+                    check_play_button(ai_settings, screen, stats, play_button, 
+                        ship, aliens, bullets, mouse_x, mouse_y, sb)
+                if stats.game_active == True:
+                    if stats.pause_game == True:
+                        check_pause_button(stats, pause_button, mouse_x, 
+                            mouse_y)
 
-def check_play_button(ai_settings, screen, stats, play_button, ship, aliens, 
-    bullets, mouse_x, mouse_y, sb):
+def check_play_button(ai_settings, screen, stats, play_button, ship, 
+    aliens, bullets, mouse_x, mouse_y, sb):
     '''Start a new game when the player clicks play'''
     button_clicked = play_button.rect.collidepoint(mouse_x, mouse_y)
     if button_clicked:
         start_game(ai_settings, screen, stats, ship, aliens, bullets, sb)
-        
+
+def check_pause_button(stats, pause_button, mouse_x, mouse_y):
+    '''resume the game when the player clicks pause'''
+    button_clicked = pause_button.rect.collidepoint(mouse_x, mouse_y)
+    if button_clicked:
+        pause_game(stats)
+
+
 def start_game(ai_settings, screen, stats, ship, aliens, 
     bullets, sb):
     
@@ -64,14 +77,21 @@ def start_game(ai_settings, screen, stats, ship, aliens,
 def check_keydown_events(event, ai_settings, screen, stats, ship, aliens, 
     bullets, blaster, sb):
     '''respond to presses'''
+    #ship movement
     if event.key == pygame.K_RIGHT:
         ship.moving_right = True
     elif event.key == pygame.K_LEFT:
         ship.moving_left = True
-    elif event.key == pygame.K_SPACE:
+    #ship firing
+    elif event.key == pygame.K_SPACE and stats.pause_game == False and stats.game_active == True:
         fire_bullet(ai_settings, screen, ship, bullets, blaster)
-    elif event.key == pygame.K_p:
+    #start game functionality
+    elif event.key == pygame.K_p and stats.game_active == False:
         start_game(ai_settings, screen, stats, ship, aliens, bullets, sb)
+    #pause functionality
+    elif event.key == pygame.K_p:
+        pause_game(stats)
+    #exit functionality
     elif event.key == pygame.K_q:
         sys.exit()
 
@@ -94,7 +114,7 @@ def check_keyup_events(event, ship):
         ship.moving_left = False
 
 def update_screen(ai_settings, screen, stats, ship, aliens, bullets, play_button, 
-    explosions, sb):
+    explosions, sb, pause_button):
     '''update images on the screen and flip to the new screen'''
     #redraw the screen during each pass through the loop.
     screen.fill(ai_settings.bg_color)
@@ -111,6 +131,9 @@ def update_screen(ai_settings, screen, stats, ship, aliens, bullets, play_button
     #draw the play button if the game is inactive
     if not stats.game_active:
         play_button.draw_button()
+    
+    if stats.pause_game:
+        pause_button.draw_button()
     
     #make the most recently drawn screen visible.
     pygame.display.flip()
@@ -250,3 +273,11 @@ def check_high_score(stats, sb):
     if stats.score > stats.high_score:
         stats.high_score = stats.score
         sb.prep_high_score()
+
+def pause_game(stats):
+    if stats.pause_game == True:
+        stats.pause_game = False
+        pygame.mouse.set_visible(False)
+    elif stats.pause_game == False:
+        stats.pause_game = True
+        pygame.mouse.set_visible(True)
