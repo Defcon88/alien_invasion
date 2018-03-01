@@ -13,7 +13,6 @@ from scoreboard import Scoreboard
 import game_functions as gf
 from explosion import Explosion
 
-
 def run_game():
     #initialize game and create a screen object.
     pygame.init()

@@ -5,8 +5,9 @@ class GameStats():
         '''initialize settings'''
         self.ai_settings = ai_settings
         self.reset_stats()
+        file_name = 'hiscore.json'
         self.high_score = 0
-        
+
         #start alien invasion in a game active state
         self.game_active = False
         
